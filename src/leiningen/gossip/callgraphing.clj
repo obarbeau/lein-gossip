@@ -23,7 +23,6 @@
   [code]
   (filter #(contains? #{'defn 'def 'defn- 'defmulti 'defmethod} (first %)) code))
 
-
 (defn extract-def-names
   "With a list of defn lists, it returns what the defs name."
   [defs]
@@ -77,10 +76,15 @@
         slash-idx (.indexOf string-name "/")]
     [(str (required-ns-lookup (symbol (.substring string-name 0 slash-idx)))) (.substring string-name (inc slash-idx))]))
 
+(defn flatten-with-maps
+  [x]
+  (filter (complement sequential?)
+          (rest (tree-seq #(or (sequential? %) (map? %)) seq x))))
+
 (defn select-calls-in-def
   [def-names used-ns-lookup required-ns-lookup def-expression]
   (let [head (str (first (rest def-expression)))]
-    (loop [body (flatten (rest (rest def-expression)))
+    (loop [body (flatten-with-maps (rest (rest def-expression)))
            so-far []]
       (if (empty? body)
         [{:type :defn :name head} (distinct (filter identity so-far))]
