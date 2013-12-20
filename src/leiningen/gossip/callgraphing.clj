@@ -68,7 +68,10 @@
         uses (rest use-expression)]
     (if (or (empty? uses) (not (vector? (first uses))))
       {}
-      (into {} (mapcat #(if (= 1 (count %)) () (map (fn [used-fn] [used-fn (% 0)]) (% 2))) uses)))))
+      (into {} (mapcat (fn [u] (if (= 1 (count u)) []
+                                   (map (fn [ufn] [ufn (first u)])
+                                        (:only (apply hash-map (rest u))))))
+                       uses)))))
 
 (defn parse-namespace-qualified-function
   [required-ns-lookup symbol-name]
