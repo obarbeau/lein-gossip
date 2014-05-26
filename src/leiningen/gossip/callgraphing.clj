@@ -71,7 +71,8 @@
       (into {} (mapcat (fn [u] (if (= 1 (count u)) []
                                    (map (fn [ufn] [ufn (first u)])
                                         (:only (apply hash-map (rest u))))))
-                       uses)))))
+                       ;; only handle cases where :only is specified (see tests)
+                       (filter #(some #{:only} %) uses))))))
 
 (defn parse-namespace-qualified-function
   [required-ns-lookup symbol-name]
