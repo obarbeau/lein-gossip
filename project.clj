@@ -1,4 +1,4 @@
-(defproject cc.artifice/lein-gossip "0.2.0-SNAPSHOT"
+(defproject cc.artifice/lein-gossip "0.2.1"
   :description "FIXME: write description"
   :url "https://github.com/artifice-cc/lein-gossip"
   :license {:name "Eclipse Public License"
