@@ -1,8 +1,8 @@
 (ns leiningen.gossip.callgraphing
-  (:use 
-    [clojure.set :only [map-invert]]
-    [clojure.string :only [join]]
-    [clojure.java.io :only [file]]))
+  (:use
+   [clojure.set :only [map-invert]]
+   [clojure.string :only [join]]
+   [clojure.java.io :only [file]]))
 
 (defn clj-to-data
   "Specify the full path of the .clj file and it will slurp it up,
@@ -40,9 +40,12 @@
   abbrevations and namespaces. This function assists with this by
   returning [namespace namespace] or [abbreviation namespace]."
   [namespace]
-  (if (= 3 (count namespace))
-    [(namespace 2) (namespace 0)]
-    [(namespace 0) (namespace 0)]))
+  (if (seq? namespace)
+    (let [namespace (vec namespace)]
+      (if (= 3 (count namespace))
+        [(namespace 2) (namespace 0)]
+        [(namespace 0) (namespace 0)]))
+    [namespace namespace]))
 
 (defn create-required-namespace-lookup
   "Given a ns declaration, find the :require section and extract a
@@ -94,12 +97,12 @@
         [{:type :defn :name head} (distinct (filter identity so-far))]
         (let [current (first body)
               result (cond
-                      (some #{current} def-names) {:type :defn :name (str current)}
-                      (some #{current} (keys used-ns-lookup)) {:type :use :calls current :name (str (used-ns-lookup current))}
-                      (not (empty? (filter #(.startsWith (str current) (str % "/")) (keys required-ns-lookup))))  
-                      (let [[namespace func] (parse-namespace-qualified-function required-ns-lookup current)]
-                        {:type :require :calls func :name namespace})
-                      :else nil)]
+                       (some #{current} def-names) {:type :defn :name (str current)}
+                       (some #{current} (keys used-ns-lookup)) {:type :use :calls current :name (str (used-ns-lookup current))}
+                       (not (empty? (filter #(.startsWith (str current) (str % "/")) (keys required-ns-lookup))))
+                       (let [[namespace func] (parse-namespace-qualified-function required-ns-lookup current)]
+                         {:type :require :calls func :name namespace})
+                       :else nil)]
           (recur (rest body) (conj so-far result)))))))
 
 (defn select-calls-for-each-def
@@ -119,17 +122,17 @@
   {:defn {:shape "ellipse", :style "bold"}
    :use {:shape "box"}
    :require {:shape "box"}
-   [:defn :use] { :penwidth 3, :style "dashed"}
-   [:defn :require] { :penwidth 3, :style "dotted"}
-   [:defn :defn] { :penwidth 3}})
-    
+   [:defn :use] {:penwidth 3, :style "dashed"}
+   [:defn :require] {:penwidth 3, :style "dotted"}
+   [:defn :defn] {:penwidth 3}})
+
 (defn style
   ([key] (style key {}))
   ([key base-styling]
-     (let [styling (merge base-styling (*formatting* key))]
-       (if (nil? styling)
-         ""
-         (str "[" (join "," (for [[k v] styling] (str (name k) "=" v))) "]")))))
+   (let [styling (merge base-styling (*formatting* key))]
+     (if (nil? styling)
+       ""
+       (str "[" (join "," (for [[k v] styling] (str (name k) "=" v))) "]")))))
 
 (defn q
   [st]
@@ -138,14 +141,14 @@
 ;; this is a hack which enables multimethods to be redefined in the REPL
 (def node-to-string nil)
 
-(defmulti node-to-string 
+(defmulti node-to-string
   (fn [nodes>codes name referenced-names]
     (let [current (first referenced-names)]
       (current :type))))
 
 (defmethod node-to-string :defn
   [nodes>codes name referenced-names]
-  (str (nodes>codes name) " " (style :defn {:label (q name )}) ";\n"))
+  (str (nodes>codes name) " " (style :defn {:label (q name)}) ";\n"))
 
 (defmethod node-to-string :use
   [nodes>codes name referenced-names]
